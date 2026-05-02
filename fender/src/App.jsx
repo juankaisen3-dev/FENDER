@@ -13,11 +13,10 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const inputRef = useRef(null);
 
-  // Load gallery from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("fender_gallery");
     if (saved) setGallery(JSON.parse(saved));
-    fetchGallery(); // Sync with server files
+    fetchGallery();
   }, []);
 
   const addToast = (message, type = "info") => {
@@ -36,7 +35,7 @@ export default function App() {
         const serverVideos = data.map(v => ({
           id: v.name,
           title: v.name,
-          thumbnail: "https://picsum.photos/seed/" + v.name + "/480/270", // Fallback thumbnail
+          thumbnail: "https://picsum.photos/seed/" + v.name + "/480/270",
           url: v.url,
           size: v.size,
           date: new Date(v.date).toLocaleDateString()
@@ -131,6 +130,7 @@ export default function App() {
         <div className="blob blob-2"></div>
       </div>
 
+      {/* --- HEADER --- */}
       <header className="header">
         <div className="logo">
           <div className="logo-icon"><i className="fas fa-bolt"></i></div>
@@ -140,12 +140,48 @@ export default function App() {
           Le futur du <span className="gradient-text">téléchargement</span>
         </h2>
         <p className="hero-desc">
-          Une plateforme premium pour récupérer vos contenus favoris en un clic.
+          Une plateforme premium conçue par <span className="dev-name">Daniel_Tech</span> pour récupérer vos contenus favoris en un clic.
           Soutient YouTube, TikTok, Instagram et +1000 sites.
         </p>
+
+        {/* --- PLATFORM ICONS --- */}
+        <div className="platform-icons">
+          <i className="fab fa-youtube" title="YouTube"></i>
+          <i className="fab fa-tiktok" title="TikTok"></i>
+          <i className="fab fa-instagram" title="Instagram"></i>
+          <i className="fab fa-facebook" title="Facebook"></i>
+          <i className="fab fa-vimeo-v" title="Vimeo"></i>
+          <i className="fab fa-twitter" title="Twitter/X"></i>
+        </div>
       </header>
 
       <main className="main">
+        {/* --- FEATURES SECTION --- */}
+        <div className="features-grid">
+          <div className="feature-item">
+            <i className="fas fa-rocket feature-icon"></i>
+            <div>
+              <h4>Ultra Rapide</h4>
+              <p>Moteur de téléchargement haute performance.</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <i className="fas fa-shield-halved feature-icon"></i>
+            <div>
+              <h4>Sécurisé</h4>
+              <p>Sans publicités intrusives ni malwares.</p>
+            </div>
+          </div>
+          <div className="feature-item">
+            <i className="fas fa-crown feature-icon"></i>
+            <div>
+              <h4>Qualité Max</h4>
+              <p>Supporte la 4K et le son haute fidélité.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* --- DOWNLOAD CARD --- */}
         <section className="card">
           <div className="input-group">
             <input
@@ -163,7 +199,7 @@ export default function App() {
               onClick={handleAnalyze}
               disabled={loading || downloading || !url}
             >
-              {loading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-search"></i>}
+              {loading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-wand-magic-sparkles"></i>}
               {loading ? "Analyse..." : "Analyser"}
             </button>
           </div>
@@ -189,6 +225,7 @@ export default function App() {
                       className={`quality-chip ${quality === q ? 'active' : ''}`}
                       onClick={() => setQuality(q)}
                     >
+                      <i className={q === 'high' ? 'fas fa-crown' : q === 'medium' ? 'fas fa-star' : 'fas fa-compress'}></i>
                       {q.toUpperCase()}
                     </div>
                   ))}
@@ -200,7 +237,7 @@ export default function App() {
                   disabled={downloading}
                   style={{ width: "100%" }}
                 >
-                  {downloading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-download"></i>}
+                  {downloading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-cloud-arrow-down"></i>}
                   {downloading ? "Téléchargement..." : "Télécharger la vidéo"}
                 </button>
               </div>
@@ -208,13 +245,18 @@ export default function App() {
           )}
         </section>
 
+        {/* --- GALLERY --- */}
         <section className="gallery">
-          <h3 style={{ marginBottom: "20px", fontFamily: "var(--font-heading)" }}>Vos Téléchargements</h3>
+          <div className="gallery-header">
+             <h3 style={{ fontFamily: "var(--font-heading)" }}><i className="fas fa-box-archive"></i> Vos Téléchargements</h3>
+             {gallery.length > 0 && <span className="gallery-count">{gallery.length} fichiers</span>}
+          </div>
           <div className="gallery-grid">
             {gallery.length === 0 ? (
-              <p style={{ color: "var(--text-dim)", textAlign: "center", gridColumn: "1/-1", padding: "40px" }}>
-                Aucun téléchargement récent.
-              </p>
+              <div className="empty-gallery">
+                <i className="fas fa-film fa-3x"></i>
+                <p>Aucun téléchargement récent.</p>
+              </div>
             ) : (
               gallery.map((vid) => (
                 <div key={vid.id} className="gallery-item">
@@ -222,13 +264,15 @@ export default function App() {
                   <div className="item-info">
                     <p className="item-title">{vid.title}</p>
                     <div className="item-actions">
-                      <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>{vid.size}</span>
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                        <i className="fas fa-file-video"></i> {vid.size}
+                      </span>
                       <div style={{ display: "flex", gap: "10px" }}>
-                        <a href={vid.url} download className="btn btn-secondary" style={{ padding: "5px 10px" }}>
+                        <a href={vid.url} download className="btn btn-secondary" style={{ padding: "8px 12px" }}>
                           <i className="fas fa-play"></i>
                         </a>
-                        <button className="btn btn-secondary" style={{ padding: "5px 10px", color: "#ff4d4d" }} onClick={() => deleteVideo(vid.title, vid.id)}>
-                          <i className="fas fa-trash"></i>
+                        <button className="btn btn-secondary" style={{ padding: "8px 12px", color: "#ff4d4d" }} onClick={() => deleteVideo(vid.title, vid.id)}>
+                          <i className="fas fa-trash-alt"></i>
                         </button>
                       </div>
                     </div>
@@ -240,10 +284,26 @@ export default function App() {
         </section>
       </main>
 
+      {/* --- FOOTER --- */}
+      <footer className="footer">
+        <div className="footer-top">
+           <div className="footer-logo">FENDER</div>
+           <p>Le meilleur outil de téléchargement vidéo, gratuit et sécurisé.</p>
+        </div>
+        <div className="footer-bottom">
+           <p>© 2026 Développé avec <i className="fas fa-heart" style={{color: "var(--primary)"}}></i> par <span className="dev-highlight">Daniel_Tech</span></p>
+           <div className="social-links">
+             <i className="fab fa-github"></i>
+             <i className="fab fa-discord"></i>
+             <i className="fab fa-twitter"></i>
+           </div>
+        </div>
+      </footer>
+
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast ${t.type}`}>
-            <i className={t.type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle'}></i>
+            <i className={t.type === 'success' ? 'fas fa-check-circle' : t.type === 'error' ? 'fas fa-circle-exclamation' : 'fas fa-info-circle'}></i>
             {t.message}
           </div>
         ))}
