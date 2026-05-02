@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const youtubedl = require('youtube-dl-exec');
+const { getOptions } = require('../config/ytdlp');
 
 router.post('/', async (req, res) => {
   const { url } = req.body;
@@ -9,15 +10,10 @@ router.post('/', async (req, res) => {
   console.log(`🔍 Analyse de l'URL : ${url}`);
 
   try {
-    const info = await youtubedl(url, {
+    const info = await youtubedl(url, getOptions(url, {
       dumpSingleJson: true,
-      noWarnings: true,
-      noCheckCertificates: true,
-      preferFreeFormats: true,
       youtubeSkipDashManifest: true,
-      referer: url,
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    });
+    }));
 
     // Formater la durée (secondes en MM:SS)
     const formatDuration = (seconds) => {

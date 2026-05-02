@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const youtubedl = require('youtube-dl-exec');
+const { getOptions } = require('../config/ytdlp');
 const path = require('path');
 const fs = require('fs');
 
@@ -33,20 +34,15 @@ router.post('/', async (req, res) => {
   if (quality === 'high') formatSelector = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]';
   else if (quality === 'low') formatSelector = 'bestvideo[height<=480]+bestaudio/best[height<=480]';
 
-  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
   console.log(`📥 Téléchargement (${quality || 'default'}): ${url}`);
 
   try {
-    await youtubedl(url, {
+    await youtubedl(url, getOptions(url, {
       output: path.join(downloadsDir, '%(title)s.%(ext)s'),
       format: formatSelector,
       noPlaylist: true,
       mergeOutputFormat: 'mp4',
-      noCheckCertificates: true,
-      userAgent: userAgent,
-      referer: url
-    });
+    }));
     
     const afterFiles = fs.readdirSync(downloadsDir);
     let newFile = afterFiles.find(f => !beforeFiles.has(f));
