@@ -7,7 +7,18 @@ const fs = require('fs');
  * @param {Object} extraOptions - Options supplémentaires
  */
 const getOptions = (url, extraOptions = {}) => {
-  const cookiesPath = path.join(__dirname, '..', 'cookies.txt');
+  let cookiesPath = path.join(__dirname, '..', 'cookies.txt');
+  
+  // Support pour Render (Secret Files ou Variable d'env)
+  if (process.env.YT_COOKIES && !fs.existsSync(cookiesPath)) {
+    try {
+      fs.writeFileSync(cookiesPath, process.env.YT_COOKIES);
+      console.log('✅ Cookies créés à partir de la variable d\'environnement');
+    } catch (err) {
+      console.error('❌ Erreur création cookies via ENV:', err.message);
+    }
+  }
+
   const hasCookies = fs.existsSync(cookiesPath);
 
   const baseOptions = {
