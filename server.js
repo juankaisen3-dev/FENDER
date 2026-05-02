@@ -8,12 +8,12 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'fender', 'dist')));
 app.use('/videos', express.static(path.join(__dirname, 'downloads')));
+app.use(express.json());
 
 // Création des dossiers nécessaires
-['downloads', 'public', 'routes'].forEach(dir => {
+['downloads', 'fender', 'routes'].forEach(dir => {
   const dirPath = path.join(__dirname, dir);
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -59,9 +59,14 @@ app.delete('/api/videos/:filename', (req, res) => {
   }
 });
 
-// Route principale
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Route principale (Sert le frontend buildé)
+app.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, 'fender', 'dist', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("Frontend non compilé. Veuillez lancer 'npm run build' dans le dossier fender.");
+  }
 });
 
 // Gestion des erreurs

@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { exec } = require('child_process');
+const youtubedl = require('youtube-dl-exec');
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
-const execPromise = util.promisify(exec);
 
 router.post('/', async (req, res) => {
   const { url, quality } = req.body;
@@ -13,51 +11,73 @@ router.post('/', async (req, res) => {
   const downloadsDir = path.join(__dirname, '..', 'downloads');
   if (!fs.existsSync(downloadsDir)) fs.mkdirSync(downloadsDir, { recursive: true });
 
-  // Nettoyage des fichiers de plus d'une heure
+  // Nettoyage automatique des fichiers de plus de 2 heures
   const now = Date.now();
-  fs.readdirSync(downloadsDir).forEach(file => {
-    const filePath = path.join(downloadsDir, file);
-    const stats = fs.statSync(filePath);
-    if (now - stats.mtimeMs > 3600000) {
-      try { fs.unlinkSync(filePath); } catch(e) {}
+  try {
+    const files = fs.readdirSync(downloadsDir);
+    for (const file of files) {
+      const filePath = path.join(downloadsDir, file);
+      const stats = fs.statSync(filePath);
+      if (now - stats.mtimeMs > 7200000) {
+        fs.unlinkSync(filePath);
+      }
     }
-  });
+  } catch (e) {
+    console.error('Erreur nettoyage:', e.message);
+  }
 
   const beforeFiles = new Set(fs.readdirSync(downloadsDir));
-  const outputTemplate = path.join(downloadsDir, '%(title)s.%(ext)s');
-
-  let formatSelector = 'best[height<=720]';
+  
+  // Sélecteur de format amélioré
+  let formatSelector = 'bestvideo[height<=720]+bestaudio/best[height<=720]';
   if (quality === 'high') formatSelector = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]';
-  else if (quality === 'medium') formatSelector = 'bestvideo[height<=720]+bestaudio/best[height<=720]';
-  else if (quality === 'low') formatSelector = 'worstvideo+worstaudio/worst';
+  else if (quality === 'low') formatSelector = 'bestvideo[height<=480]+bestaudio/best[height<=480]';
 
-  const command = `yt-dlp -o "${outputTemplate}" -f "${formatSelector}" --no-playlist --merge-output-format mp4 "${url}"`;
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-  console.log(`📥 Téléchargement (${quality}): ${url}`);
+  console.log(`📥 Téléchargement (${quality || 'default'}): ${url}`);
 
   try {
-    await execPromise(command, { timeout: 600000 });
-    console.log('✅ Téléchargement terminé');
-
+    await youtubedl(url, {
+      output: path.join(downloadsDir, '%(title)s.%(ext)s'),
+      format: formatSelector,
+      noPlaylist: true,
+      mergeOutputFormat: 'mp4',
+      noCheckCertificates: true,
+      userAgent: userAgent,
+      referer: url
+    });
+    
     const afterFiles = fs.readdirSync(downloadsDir);
     let newFile = afterFiles.find(f => !beforeFiles.has(f));
+    
     if (!newFile) {
       const files = afterFiles
         .map(f => ({ name: f, time: fs.statSync(path.join(downloadsDir, f)).mtimeMs }))
         .sort((a, b) => b.time - a.time);
       newFile = files[0]?.name;
     }
-    if (!newFile) throw new Error('Aucun fichier créé');
+
+    if (!newFile) throw new Error('Le fichier n\'a pas pu être créé');
 
     const filePath = path.join(downloadsDir, newFile);
     const stat = fs.statSync(filePath);
-    console.log(`📁 Fichier prêt: ${newFile} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
+    
+    console.log(`✅ Succès: ${newFile} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
 
-    res.json({ success: true, filename: newFile, size: stat.size });
+    res.json({ 
+      success: true, 
+      filename: newFile, 
+      size: stat.size,
+      url: `/videos/${encodeURIComponent(newFile)}`
+    });
 
   } catch (error) {
     console.error('❌ Erreur download:', error.message);
-    res.status(500).json({ error: 'Échec du téléchargement', details: error.stderr || error.message });
+    res.status(500).json({ 
+      error: 'Échec du téléchargement', 
+      details: error.message 
+    });
   }
 });
 
