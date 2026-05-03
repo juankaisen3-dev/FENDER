@@ -12,7 +12,6 @@ router.post('/', async (req, res) => {
   try {
     const info = await youtubedl(url, getOptions(url, {
       dumpSingleJson: true,
-      youtubeSkipDashManifest: true,
     }));
 
     // Formater la durée (secondes en MM:SS)
