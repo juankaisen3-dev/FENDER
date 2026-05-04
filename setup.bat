@@ -13,7 +13,7 @@ echo [2/3] Installation des dependances Node.js...
 call npm install
 
 echo [3/3] Preparation du frontend (Fender)...
-cd fender
+cd frontend
 call npm install
 call npm run build
 cd ..
