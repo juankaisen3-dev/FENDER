@@ -325,51 +325,85 @@ body {
 
 /* --- Responsive Design --- */
 @media (max-width: 1024px) {
-  .steps-grid { grid-template-columns: repeat(2, 1fr); }
-  .info-row, .info-row.reverse { grid-template-columns: 1fr; gap: 30px; padding: 30px; }
+  .header { margin-top: 40px; }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .info-row, .info-row.reverse { 
+    grid-template-columns: 1fr; 
+    gap: 30px; 
+    padding: 30px; 
+    border-radius: 30px;
+  }
   .info-row.reverse .info-content { order: 1; }
   .info-row.reverse .info-image-placeholder { order: 2; }
-}
-
-@media (max-width: 992px) {
-  .header { margin: 40px auto 30px; padding: 0 10px; }
-  .hero-title { font-size: clamp(2rem, 8vw, 3.5rem); }
-  .features-grid { grid-template-columns: repeat(2, 1fr); max-width: 100%; }
-  .card { padding: 30px; border-radius: 24px; }
+  .info-image-placeholder { height: 200px; }
 }
 
 @media (max-width: 768px) {
-  .app { padding: 15px; }
-  .logo-icon { width: 50px; height: 50px; font-size: 22px; }
-  .logo-name { font-size: 32px; }
-  .hero-desc { font-size: 1.1rem; }
+  .app { padding: 10px; }
+  .header { margin-bottom: 30px; }
+  .hero-title { font-size: clamp(1.8rem, 10vw, 3rem); }
+  .hero-desc { font-size: 1rem; padding: 0 10px; }
   
-  .features-grid { grid-template-columns: 1fr; gap: 15px; }
+  .features-grid { grid-template-columns: 1fr; gap: 12px; }
   .steps-grid { grid-template-columns: 1fr; }
-  .section-title { font-size: 1.8rem; }
+  .section-title { font-size: 1.6rem; }
   
-  .input-group { flex-direction: column; background: transparent; border: none; padding: 0; }
-  .url-input { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 10px; width: 100%; }
-  .btn-primary { width: 100%; justify-content: center; height: 55px; border-radius: 16px; }
+  .card { padding: 20px; border-radius: 24px; }
+  .input-group { 
+    flex-direction: column; 
+    background: transparent; 
+    border: none; 
+    padding: 0; 
+    gap: 8px;
+  }
+  .url-input { 
+    background: rgba(255, 255, 255, 0.08); 
+    border: 1px solid var(--glass-border); 
+    border-radius: 16px; 
+    width: 100%; 
+    height: 55px;
+  }
+  .btn-primary { 
+    width: 100%; 
+    justify-content: center; 
+    height: 55px; 
+    border-radius: 16px;
+    font-size: 1rem;
+  }
 
-  .info-panel { grid-template-columns: 1fr; gap: 25px; padding-top: 30px; }
-  .meta-info { flex-wrap: wrap; gap: 15px; }
-  .quality-options { flex-wrap: wrap; }
-  .quality-chip { flex: 1; min-width: 100px; justify-content: center; }
+  .info-panel { 
+    grid-template-columns: 1fr; 
+    gap: 20px; 
+    padding-top: 25px; 
+  }
+  .thumbnail-container { border-radius: 16px; }
+  .meta-info { gap: 10px; font-size: 0.85rem; }
+  .quality-options { gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+  .quality-chip { padding: 8px 15px; font-size: 0.8rem; flex-shrink: 0; }
 
-  .gallery-grid { grid-template-columns: 1fr; gap: 20px; }
+  .gallery-grid { grid-template-columns: 1fr; gap: 15px; }
+  .item-info { padding: 15px; }
   
-  .footer-bottom { flex-direction: column; gap: 20px; text-align: center; padding-bottom: 20px; }
+  .footer-bottom { 
+    flex-direction: column; 
+    gap: 15px; 
+    text-align: center; 
+    padding-bottom: 20px; 
+    font-size: 0.9rem;
+  }
   
-  .toast-container { right: 20px; left: 20px; bottom: 20px; }
-  .toast { width: 100%; justify-content: center; }
+  .toast-container { 
+    right: 15px; 
+    left: 15px; 
+    bottom: 20px; 
+  }
+  .toast { width: 100%; padding: 15px; font-size: 0.9rem; }
 }
 
 @media (max-width: 480px) {
-  .hero-title { font-size: 2rem; }
-  .platform-icons { gap: 15px; font-size: 18px; flex-wrap: wrap; }
-  .header { margin-top: 20px; }
-  .logo { margin-bottom: 20px; }
-  .info-content h3 { font-size: 1.6rem; }
-  .card { padding: 20px; }
+  .logo-icon { width: 45px; height: 45px; font-size: 20px; border-radius: 12px; }
+  .logo-name { font-size: 28px; }
+  .platform-icons { gap: 15px; font-size: 18px; }
+  .info-content h3 { font-size: 1.4rem; }
+  .badge { font-size: 0.7rem; padding: 4px 12px; }
 }

@@ -32,10 +32,11 @@ const getOptions = (url, extraOptions = {}) => {
       'Origin: https://www.instagram.com',
       'Referer: https://www.instagram.com/'
     ],
-    userAgent: 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     // Flags critiques pour éviter les blocages
     noCacheDir: true,
     rmCacheDir: true,
+    impersonate: 'chrome', // Imite parfaitement Chrome pour tromper Instagram
     extractorArgs: 'instagram:get_comments=0',
     sleepInterval: 2,
     ...extraOptions
