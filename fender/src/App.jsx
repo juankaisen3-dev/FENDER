@@ -1,7 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
-const API_BASE = "/api";
+// Services
+import * as api from "./services/api";
+
+// Components
+import { Header } from "./components/Header";
+import { Features } from "./components/Features";
+import { DownloadCard } from "./components/DownloadCard";
+import { Steps } from "./components/Steps";
+import { InfoSection } from "./components/InfoSection";
+import { Gallery } from "./components/Gallery";
+import { Footer } from "./components/Footer";
+import { Toast } from "./components/Toast";
 
 export default function App() {
   const [url, setUrl] = useState("");
@@ -16,7 +27,7 @@ export default function App() {
   useEffect(() => {
     const saved = localStorage.getItem("fender_gallery");
     if (saved) setGallery(JSON.parse(saved));
-    fetchGallery();
+    loadGallery();
   }, []);
 
   const addToast = (message, type = "info") => {
@@ -27,10 +38,9 @@ export default function App() {
     }, 4000);
   };
 
-  const fetchGallery = async () => {
+  const loadGallery = async () => {
     try {
-      const res = await fetch(`${API_BASE}/videos`);
-      const data = await res.json();
+      const data = await api.fetchVideos();
       if (Array.isArray(data)) {
         const serverVideos = data.map(v => ({
           id: v.name,
@@ -53,12 +63,7 @@ export default function App() {
     setLoading(true);
     setVideoInfo(null);
     try {
-      const res = await fetch(`${API_BASE}/info`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
+      const data = await api.analyzeVideo(url);
       if (data.success) {
         setVideoInfo(data);
         addToast("Analyse terminée !", "success");
@@ -79,13 +84,7 @@ export default function App() {
     addToast("Téléchargement lancé...", "info");
     
     try {
-      const res = await fetch(`${API_BASE}/download`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: videoInfo.original_url || url, quality }),
-      });
-      
-      const data = await res.json();
+      const data = await api.downloadVideo(videoInfo.original_url || url, quality);
       if (data.success) {
         const newEntry = {
           id: Date.now(),
@@ -111,9 +110,9 @@ export default function App() {
     }
   };
 
-  const deleteVideo = async (filename, id) => {
+  const handleDelete = async (filename, id) => {
     try {
-      await fetch(`${API_BASE}/videos/${encodeURIComponent(filename)}`, { method: "DELETE" });
+      await api.deleteVideoFile(filename);
       const updated = gallery.filter(v => v.id !== id);
       setGallery(updated);
       localStorage.setItem("fender_gallery", JSON.stringify(updated));
@@ -130,256 +129,31 @@ export default function App() {
         <div className="blob blob-2"></div>
       </div>
 
-      {/* --- HEADER --- */}
-      <header className="header">
-        <div className="logo">
-          <div className="logo-icon"><i className="fas fa-bolt"></i></div>
-          <h1 className="logo-name">FENDER</h1>
-        </div>
-        <h2 className="hero-title">
-          Le futur du <span className="gradient-text">téléchargement</span>
-        </h2>
-        <p className="hero-desc">
-          Une plateforme premium conçue par <span className="dev-name">Daniel_Tech</span> pour récupérer vos contenus favoris en un clic.
-          Soutient YouTube, TikTok, Instagram et +1000 sites.
-        </p>
-
-        {/* --- PLATFORM ICONS --- */}
-        <div className="platform-icons">
-          <i className="fab fa-youtube" title="YouTube"></i>
-          <i className="fab fa-tiktok" title="TikTok"></i>
-          <i className="fab fa-instagram" title="Instagram"></i>
-          <i className="fab fa-facebook" title="Facebook"></i>
-          <i className="fab fa-vimeo-v" title="Vimeo"></i>
-          <i className="fab fa-twitter" title="Twitter/X"></i>
-        </div>
-      </header>
+      <Header />
 
       <main className="main">
-        {/* --- FEATURES SECTION --- */}
-        <div className="features-grid">
-          <div className="feature-item">
-            <i className="fas fa-rocket feature-icon"></i>
-            <div>
-              <h4>Ultra Rapide</h4>
-              <p>Moteur de téléchargement haute performance.</p>
-            </div>
-          </div>
-          <div className="feature-item">
-            <i className="fas fa-shield-halved feature-icon"></i>
-            <div>
-              <h4>Sécurisé</h4>
-              <p>Sans publicités intrusives ni malwares.</p>
-            </div>
-          </div>
-          <div className="feature-item">
-            <i className="fas fa-crown feature-icon"></i>
-            <div>
-              <h4>Qualité Max</h4>
-              <p>Supporte la 4K et le son haute fidélité.</p>
-            </div>
-          </div>
-        </div>
+        <Features />
 
-        {/* --- DOWNLOAD CARD --- */}
-        <section className="card">
-          <div className="input-group">
-            <input
-              ref={inputRef}
-              type="text"
-              className="url-input"
-              placeholder="Collez l'URL de la vidéo ici..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-              disabled={loading || downloading}
-            />
-            <button 
-              className="btn btn-primary" 
-              onClick={handleAnalyze}
-              disabled={loading || downloading || !url}
-            >
-              {loading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-wand-magic-sparkles"></i>}
-              {loading ? "Analyse..." : "Analyser"}
-            </button>
-          </div>
+        <DownloadCard 
+          url={url}
+          setUrl={setUrl}
+          onAnalyze={handleAnalyze}
+          loading={loading}
+          downloading={downloading}
+          videoInfo={videoInfo}
+          quality={quality}
+          setQuality={setQuality}
+          onDownload={handleDownload}
+          inputRef={inputRef}
+        />
 
-          {videoInfo && (
-            <div className="info-panel">
-              <div className="thumbnail-container">
-                <img src={videoInfo.thumbnail} className="thumbnail" alt="preview" />
-                <span className="platform-tag">{videoInfo.platform}</span>
-              </div>
-              <div className="video-details">
-                <h2>{videoInfo.title}</h2>
-                <div className="meta-info">
-                  <span><i className="far fa-clock"></i> {videoInfo.duration}</span>
-                  <span><i className="far fa-user"></i> {videoInfo.uploader}</span>
-                  <span><i className="far fa-eye"></i> {videoInfo.views}</span>
-                </div>
-
-                <div className="quality-options">
-                  {["low", "medium", "high"].map((q) => (
-                    <div 
-                      key={q} 
-                      className={`quality-chip ${quality === q ? 'active' : ''}`}
-                      onClick={() => setQuality(q)}
-                    >
-                      <i className={q === 'high' ? 'fas fa-crown' : q === 'medium' ? 'fas fa-star' : 'fas fa-compress'}></i>
-                      {q.toUpperCase()}
-                    </div>
-                  ))}
-                </div>
-
-                <button 
-                  className="btn btn-primary" 
-                  onClick={handleDownload}
-                  disabled={downloading}
-                  style={{ width: "100%" }}
-                >
-                  {downloading ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-cloud-arrow-down"></i>}
-                  {downloading ? "Téléchargement..." : "Télécharger la vidéo"}
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* --- HOW IT WORKS --- */}
-        <section className="steps-section">
-          <div className="section-header">
-            <h3 className="section-title">Comment utiliser <span className="gradient-text">FENDER</span> ?</h3>
-            <p className="section-subtitle">Télécharger du contenu n'a jamais été aussi simple et rapide.</p>
-          </div>
-          <div className="steps-grid">
-            <div className="step-card">
-              <div className="step-num">01</div>
-              <i className="fas fa-copy step-icon"></i>
-              <h5>Copiez l'URL</h5>
-              <p>Allez sur votre plateforme favorite et copiez le lien de la vidéo ou du Reels.</p>
-            </div>
-            <div className="step-card">
-              <div className="step-num">02</div>
-              <i className="fas fa-paste step-icon"></i>
-              <h5>Collez ici</h5>
-              <p>Insérez le lien dans la barre de recherche FENDER ci-dessus.</p>
-            </div>
-            <div className="step-card">
-              <div className="step-num">03</div>
-              <i className="fas fa-bolt step-icon"></i>
-              <h5>Analysez</h5>
-              <p>Cliquez sur "Analyser" pour récupérer les informations et formats disponibles.</p>
-            </div>
-            <div className="step-card">
-              <div className="step-num">04</div>
-              <i className="fas fa-download step-icon"></i>
-              <h5>Récupérez</h5>
-              <p>Choisissez votre qualité et lancez le téléchargement instantané.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* --- DETAILED FEATURES --- */}
-        <section className="info-grid-section">
-           <div className="info-row">
-             <div className="info-content">
-               <span className="badge">Performance</span>
-               <h3>Vitesse de téléchargement <br/><span className="gradient-text">sans limite</span></h3>
-               <p>FENDER utilise des algorithmes de pointe pour traiter vos requêtes en quelques millisecondes. Pas d'attente, pas de file d'attente.</p>
-               <ul className="info-list">
-                 <li><i className="fas fa-check-circle"></i> Serveurs haut débit optimisés</li>
-                 <li><i className="fas fa-check-circle"></i> Compression intelligente sans perte</li>
-                 <li><i className="fas fa-check-circle"></i> Reprise de téléchargement supportée</li>
-               </ul>
-             </div>
-             <div className="info-image-placeholder">
-                <i className="fas fa-gauge-high"></i>
-             </div>
-           </div>
-
-           <div className="info-row reverse">
-             <div className="info-content">
-               <span className="badge">Universalité</span>
-               <h3>Support multi-plateforme <br/><span className="gradient-text">tout-en-un</span></h3>
-               <p>Plus besoin de 10 sites différents. FENDER est compatible avec la majorité des réseaux sociaux et sites de streaming.</p>
-               <div className="mini-platforms">
-                 <span>YouTube</span>
-                 <span>TikTok</span>
-                 <span>Instagram</span>
-                 <span>Facebook</span>
-                 <span>X (Twitter)</span>
-                 <span>Vimeo</span>
-               </div>
-             </div>
-             <div className="info-image-placeholder">
-                <i className="fas fa-globe-africa"></i>
-             </div>
-           </div>
-        </section>
-
-        {/* --- GALLERY --- */}
-        <section className="gallery">
-          <div className="gallery-header">
-             <h3 style={{ fontFamily: "var(--font-heading)" }}><i className="fas fa-box-archive"></i> Vos Téléchargements</h3>
-             {gallery.length > 0 && <span className="gallery-count">{gallery.length} fichiers</span>}
-          </div>
-          <div className="gallery-grid">
-            {gallery.length === 0 ? (
-              <div className="empty-gallery">
-                <i className="fas fa-film fa-3x"></i>
-                <p>Aucun téléchargement récent.</p>
-              </div>
-            ) : (
-              gallery.map((vid) => (
-                <div key={vid.id} className="gallery-item">
-                  <img src={vid.thumbnail} className="item-thumb" alt="" />
-                  <div className="item-info">
-                    <p className="item-title">{vid.title}</p>
-                    <div className="item-actions">
-                      <span style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
-                        <i className="fas fa-file-video"></i> {vid.size}
-                      </span>
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <a href={vid.url} download className="btn btn-secondary" style={{ padding: "8px 12px" }}>
-                          <i className="fas fa-play"></i>
-                        </a>
-                        <button className="btn btn-secondary" style={{ padding: "8px 12px", color: "#ff4d4d" }} onClick={() => deleteVideo(vid.title, vid.id)}>
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        <Steps />
+        <InfoSection />
+        <Gallery gallery={gallery} onDelete={handleDelete} />
       </main>
 
-      {/* --- FOOTER --- */}
-      <footer className="footer">
-        <div className="footer-top">
-           <div className="footer-logo">FENDER</div>
-           <p>Le meilleur outil de téléchargement vidéo, gratuit et sécurisé.</p>
-        </div>
-        <div className="footer-bottom">
-           <p>© 2026 Développé avec <i className="fas fa-heart" style={{color: "var(--primary)"}}></i> par <span className="dev-highlight">Daniel_Tech</span></p>
-           <div className="social-links">
-             <i className="fab fa-github"></i>
-             <i className="fab fa-discord"></i>
-             <i className="fab fa-twitter"></i>
-           </div>
-        </div>
-      </footer>
-
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast ${t.type}`}>
-            <i className={t.type === 'success' ? 'fas fa-check-circle' : t.type === 'error' ? 'fas fa-circle-exclamation' : 'fas fa-info-circle'}></i>
-            {t.message}
-          </div>
-        ))}
-      </div>
+      <Footer />
+      <Toast toasts={toasts} />
     </div>
   );
 }
